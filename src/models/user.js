@@ -1,30 +1,39 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const mongoose = require('mongoose');
 
-const User = sequelize.define('User', {
-  id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true
-  },
+const UserSchema = new mongoose.Schema({
   name: {
-    type: DataTypes.STRING,
-    allowNull: false
+    type: String,
+    required: [true, 'Please add a name'],
+    trim: true,
+    maxlength: [50, 'Name cannot be more than 50 characters']
   },
   email: {
-    type: DataTypes.STRING,
-    allowNull: false,
+    type: String,
+    required: [true, 'Please add an email'],
     unique: true,
-    validate: {
-      isEmail: true
-    }
+    match: [
+      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+      'Please add a valid email'
+    ]
   },
   password: {
-    type: DataTypes.STRING,
-    allowNull: false
+    type: String,
+    required: [true, 'Please add a password'],
+    minlength: [8, 'Password must be at least 8 characters'],
+    select: false
+  },
+  role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
   }
-}, {
-  timestamps: true
 });
 
-module.exports = User;
+// Add index for email field for faster lookups
+UserSchema.index({ email: 1 });
+
+module.exports = mongoose.model('User', UserSchema);
